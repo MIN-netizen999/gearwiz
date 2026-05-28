@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GearWiz — 게이밍 장비 최적화 플랫폼</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --accent: #FFCC33;
+    --accent2: #FF3C5F;
+    --dark: #0A0C10;
+    --surface: #12151C;
+    --surface2: #1A1E28;
+    --surface3: #22273A;
+    --border: rgba(255,255,255,0.07);
+    --text: #E8ECF4;
+    --muted: #7A8199;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--dark);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .font-display { font-family: 'Bebas Neue', sans-serif; }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+  }
+
+  /* Grid noise background */
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(255,204,51,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,204,51,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Glow effects */
+  .glow-green { box-shadow: 0 0 20px rgba(255,204,51,0.15); }
+  .glow-red   { box-shadow: 0 0 20px rgba(255,60,95,0.15); }
+  .text-accent { color: var(--accent); }
+  .text-accent2 { color: var(--accent2); }
+
+  /* Nav */
+  nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); background: rgba(10,12,16,0.85); border-bottom: 1px solid var(--border); }
+
+  /* Tab buttons */
+  .tab-btn {
+    padding: 0.6rem 1.2rem; border-radius: 6px; font-size: 0.85rem; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; border: none; background: transparent;
+    color: var(--muted); white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--text); background: var(--surface2); }
+  .tab-btn.active { color: var(--accent); background: rgba(255,204,51,0.08); }
+
+  /* Cards */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.5rem;
+  }
+  .card-sm { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+
+  /* Form elements */
+  select, input[type="text"], input[type="number"], input[type="range"] {
+    background: var(--surface3); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; outline: none;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: border-color 0.2s;
+  }
+  select:focus, input[type="text"]:focus, input[type="number"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(255,204,51,0.12);
+  }
+  select { padding: 0.65rem 1rem; width: 100%; font-size: 0.9rem; }
+  input[type="text"], input[type="number"] { padding: 0.65rem 1rem; width: 100%; font-size: 0.9rem; }
+
+  /* Range slider */
+  input[type="range"] {
+    -webkit-appearance: none; width: 100%; height: 4px;
+    background: var(--surface3); border: none; border-radius: 2px; cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px;
+    background: var(--accent); border-radius: 50%;
+    box-shadow: 0 0 8px rgba(255,204,51,0.5);
+  }
+
+  /* Primary button */
+  .btn-primary {
+    background: var(--accent); color: #0A0C10; font-weight: 700;
+    padding: 0.75rem 1.5rem; border-radius: 8px; border: none;
+    cursor: pointer; font-size: 0.95rem; font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.2s; letter-spacing: 0.02em;
+  }
+  .btn-primary:hover { background: #e6b800; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(255,204,51,0.3); }
+  .btn-primary:active { transform: translateY(0); }
+
+  /* Buy button */
+  .btn-buy {
+    background: transparent; color: var(--accent); font-weight: 600;
+    padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid var(--accent);
+    cursor: pointer; font-size: 0.82rem; font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.2s; text-decoration: none; display: inline-block;
+  }
+  .btn-buy:hover { background: rgba(255,204,51,0.1); }
+
+  /* Badge */
+  .badge {
+    font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 20px;
+    letter-spacing: 0.05em; display: inline-block;
+  }
+  .badge-green { background: rgba(255,204,51,0.12); color: var(--accent); border: 1px solid rgba(255,204,51,0.25); }
+  .badge-red   { background: rgba(255,60,95,0.12); color: var(--accent2); border: 1px solid rgba(255,60,95,0.25); }
+  .badge-yellow { background: rgba(255,200,0,0.12); color: #FFC800; border: 1px solid rgba(255,200,0,0.25); }
+  .badge-blue  { background: rgba(80,160,255,0.12); color: #50A0FF; border: 1px solid rgba(80,160,255,0.25); }
+
+  /* Section tabs */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* Performance bar */
+  .perf-bar-wrap { background: var(--surface3); border-radius: 4px; height: 6px; overflow: hidden; }
+  .perf-bar { height: 100%; border-radius: 4px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+
+  /* Accordion */
+  .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+  .accordion-content.open { max-height: 600px; }
+  .accordion-chevron { transition: transform 0.3s; display: inline-block; }
+  .accordion-chevron.open { transform: rotate(180deg); }
+
+  /* Step indicator */
+  .step-num {
+    width: 28px; height: 28px; border-radius: 50%; background: rgba(255,204,51,0.12);
+    border: 1px solid rgba(255,204,51,0.3); color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; font-weight: 700; flex-shrink: 0;
+  }
+
+  /* Diagnostic tree */
+  .diag-check { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+  .diag-check input[type="checkbox"] { width: 16px; height: 16px; margin-top: 2px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+
+  /* Pulse animation */
+  @keyframes pulse-green { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  .pulse { animation: pulse-green 2s ease infinite; }
+
+  /* Fade in */
+  @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  .fade-up { animation: fadeUp 0.4s ease forwards; }
+
+  /* Hero glow */
+  .hero-glow {
+    position: absolute; width: 600px; height: 600px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,204,51,0.06) 0%, transparent 70%);
+    top: -200px; right: -200px; pointer-events: none;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--dark); }
+  ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 2px; }
+
+  /* Game tag pill */
+  .game-tag {
+    padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 500;
+    border: 1px solid var(--border); background: var(--surface2); color: var(--muted);
+    cursor: pointer; transition: all 0.18s;
+  }
+  .game-tag.selected { border-color: var(--accent); background: rgba(255,204,51,0.08); color: var(--accent); }
+
+  /* Result spec row */
+  .spec-row { display: flex; justify-content: space-between; align-items: center; padding: 0.55rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+  .spec-row:last-child { border-bottom: none; }
+
+  /* Mobile */
+  @media (max-width: 768px) {
+    .two-col { flex-direction: column !important; }
+    .hide-mobile { display: none !important; }
+  }
+</style>
+</head>
+<body class="bg-grid">
+
+<!-- ===== NAVBAR ===== -->
+<nav>
+  <div style="max-width:1200px; margin:0 auto; padding:0 1.5rem; display:flex; align-items:center; gap:1rem; height:60px;">
+    <div class="font-display" style="font-size:1.6rem; color:var(--accent); letter-spacing:2px; flex-shrink:0;">
+      GEAR<span style="color:var(--text);">WIZ</span>
+    </div>
+    <div style="width:1px; height:24px; background:var(--border); margin:0 0.5rem;"></div>
+    <div style="display:flex; gap:4px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding:6px 0;">
+      <button class="tab-btn active" onclick="switchTab('wizard')" id="tab-wizard">💰 얼마까지 들고왔어?</button>
+      <button class="tab-btn" onclick="switchTab('error')" id="tab-error">🔧 오류 진단기</button>
+      <button class="tab-btn" onclick="switchTab('sound')" id="tab-sound">🎙 사운드 트러블슈팅</button>
+    </div>
+    <div style="margin-left:auto; flex-shrink:0;">
+      <div class="badge badge-green pulse" style="font-size:0.68rem;">LIVE</div>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== MAIN ===== -->
+<main style="max-width:1200px; margin:0 auto; padding:2rem 1.5rem; position:relative; z-index:1;">
+
+<!-- =============================== -->
+<!-- TAB 1: 얼마까지 들고왔어? (AI) -->
+<!-- =============================== -->
+<section id="section-wizard" class="section active">
+  <!-- Hero -->
+  <div style="position:relative; margin-bottom:2rem; overflow:hidden;">
+    <div class="hero-glow"></div>
+    <div style="max-width:620px;">
+
+      <h1 class="font-display" style="font-size:clamp(2rem,5vw,3.2rem); line-height:1.1; letter-spacing:2px; margin-bottom:0.75rem;">
+        얼마까지<br><span class="text-accent">들고왔어?</span>
+      </h1>
+      <p style="color:var(--muted); font-size:0.95rem; line-height:1.7;">
+        AI가 부품 간 호환성·전력 예산·게임 특성을 동시에 계산해<br class="hide-mobile" />최적 조합과 실전 퍼포먼스 예측을 즉시 생성합니다.
+      </p>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:1.5rem; flex-wrap:wrap; align-items:flex-start;" class="two-col">
+    <!-- LEFT: 입력 폼 -->
+    <div style="flex:1; min-width:300px;">
+      <div class="card">
+        <h2 style="font-size:1rem; font-weight:700; margin-bottom:1.25rem; color:var(--text);">📋 견적 조건 입력</h2>
+
+        <!-- 예산 슬라이더 -->
+        <div style="margin-bottom:1.1rem;">
+          <label style="font-size:0.8rem; color:var(--muted); font-weight:600; letter-spacing:0.06em; display:block; margin-bottom:6px;">
+            총 예산 — <span class="text-accent" id="budget-display">100만원</span>
+            <span id="budget-sub-label" style="color:var(--muted); font-weight:400; font-size:0.75rem; margin-left:6px;">(본체 + 주변기기 합산)</span>
+          </label>
+          <input type="range" id="budget-slider" min="30" max="500" step="5" value="100" oninput="updateBudget()" />
+          <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--muted); margin-top:4px;">
+            <span>30만원</span><span>500만원</span>
+          </div>
+        </div>
+
+        <!-- 게임 선택 -->
+        <div style="margin-bottom:1rem;">
+          <label style="font-size:0.8rem; color:var(--muted); font-weight:600; letter-spacing:0.06em; display:block; margin-bottom:8px;">주로 하는 게임 (복수 선택 가능)</label>
+          <div id="game-tags" style="display:flex; flex-wrap:wrap; gap:6px;">
+            <span class="game-tag selected" data-game="발로란트">발로란트</span>
+            <span class="game-tag" data-game="리그오브레전드">리그오브레전드</span>
+            <span class="game-tag" data-game="배틀그라운드">배틀그라운드</span>
+            <span class="game-tag" data-game="마인크래프트">마인크래프트</span>
+            <span class="game-tag" data-game="오버워치2">오버워치 2</span>
+            <span class="game-tag" data-game="사이버펑크2077">사이버펑크 2077</span>
+            <span class="game-tag" data-game="에이펙스레전드">에이펙스 레전드</span>
+            <span class="game-tag" data-game="로스트아크">로스트아크</span>
+          </div>
+          <div style="margin-top:8px;">
+            <input type="text" id="custom-game" placeholder="직접 입력 (예: 스팀VR, 디아블로4…)" style="width:100%;" />
+          </div>
+        </div>
+
+        <!-- 주변기기 체크박스 -->
+        <div id="peripheral-checkbox-wrap" style="margin-bottom:1.25rem; padding:0.9rem 1rem; border-radius:10px; background:var(--surface2); border:1px solid var(--border); cursor:pointer; transition:border-color 0.2s;" onclick="togglePeripheral()">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div id="peri-toggle" style="width:40px; height:22px; border-radius:11px; background:var(--surface3); border:1px solid var(--border); position:relative; transition:background 0.2s; flex-shrink:0;">
+              <div id="peri-knob" style="position:absolute; top:3px; left:3px; width:14px; height:14px; border-radius:50%; background:var(--muted); transition:all 0.2s;"></div>
+            </div>
+            <div>
+              <p style="font-size:0.88rem; font-weight:600; color:var(--text);">🖥 모니터 및 주변기기도 함께 추천받기</p>
+              <p style="font-size:0.75rem; color:var(--muted); margin-top:1px;">게임 특성에 맞는 모니터·마우스·키보드·마이크 포함</p>
+            </div>
+          </div>
+          <!-- 주변기기 세부 옵션 (토글 시 표시) -->
+          <div id="peri-options" style="display:none; margin-top:0.85rem; padding-top:0.85rem; border-top:1px solid var(--border);">
+            <p style="font-size:0.75rem; color:var(--muted); font-weight:600; margin-bottom:8px;">포함할 주변기기 선택</p>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+              <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:0.8rem; color:var(--text);">
+                <input type="checkbox" class="peri-item" value="모니터" checked style="accent-color:var(--accent);" /> 모니터
+              </label>
+              <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:0.8rem; color:var(--text);">
+                <input type="checkbox" class="peri-item" value="마우스" checked style="accent-color:var(--accent);" /> 마우스
+              </label>
+              <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:0.8rem; color:var(--text);">
+                <input type="checkbox" class="peri-item" value="키보드" checked style="accent-color:var(--accent);" /> 키보드
+              </label>
+              <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:0.8rem; color:var(--text);">
+                <input type="checkbox" class="peri-item" value="헤드셋/마이크" style="accent-color:var(--accent);" /> 헤드셋/마이크
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-primary" style="width:100%; font-size:1rem; letter-spacing:0.04em;" onclick="runWizard()">
+          ⚡ AI 견적 추천받기
+        </button>
+        <p style="font-size:0.72rem; color:var(--muted); text-align:center; margin-top:8px; opacity:0.8;">Claude AI가 실시간으로 호환성·가성비를 검토합니다</p>
+      </div>
+    </div>
+
+    <!-- RIGHT: 결과 -->
+    <div style="flex:1.6; min-width:300px;" id="wizard-result-area">
+      <div class="card" style="display:flex; align-items:center; justify-content:center; min-height:420px; flex-direction:column; gap:1rem; border-style:dashed;">
+        <div style="font-size:3rem; opacity:0.15;">🤖</div>
+        <p style="color:var(--muted); font-size:0.9rem; text-align:center; line-height:1.8;">
+          좌측에서 예산과 게임을 설정하고<br><strong style="color:var(--text);">AI 견적 추천받기</strong>를 눌러주세요
+        </p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
+          <span class="badge badge-green" style="font-size:0.7rem;">✓ 부품 호환성 자동 검증</span>
+          <span class="badge badge-blue" style="font-size:0.7rem;">✓ 게임별 퍼포먼스 예측</span>
+          <span class="badge badge-yellow" style="font-size:0.7rem;">✓ 예산 초과 방지</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============================== -->
+<!-- TAB 2: 오류 진단기 -->
+<!-- =============================== -->
+<section id="section-error" class="section">
+  <div style="margin-bottom:2rem;">
+    <div style="display:flex; gap:6px; margin-bottom:0.75rem; flex-wrap:wrap;">
+      <div class="badge badge-red">AI 오류 진단 엔진</div>
+      <div class="badge badge-blue">DB 내장 + 자유 입력 지원</div>
+    </div>
+    <h1 class="font-display" style="font-size:clamp(1.8rem,4vw,2.8rem); letter-spacing:2px; margin-bottom:0.5rem;">
+      게이밍 오류 <span class="text-accent2">즉시 진단기</span>
+    </h1>
+    <p style="color:var(--muted); font-size:0.9rem;">오류 코드를 직접 입력하거나 목록에서 골라보세요 — AI가 원인과 해결법을 단계별로 안내합니다.</p>
+  </div>
+
+  <div style="display:flex; gap:1.5rem; flex-wrap:wrap; align-items:flex-start;" class="two-col">
+    <div style="flex:1; min-width:280px;">
+      <div class="card">
+        <h2 style="font-size:1rem; font-weight:700; margin-bottom:1.25rem;">🔍 오류 코드 입력</h2>
+
+        <!-- 직접 입력 (메인) -->
+        <div style="margin-bottom:0.75rem;">
+          <label style="font-size:0.8rem; color:var(--muted); font-weight:600; letter-spacing:0.06em; display:block; margin-bottom:6px;">오류 코드 직접 입력</label>
+          <div style="position:relative;">
+            <input type="text" id="error-input"
+              placeholder="예: VAN9003, 0xc000007b, VAC ban…"
+              style="width:100%; padding-right:2.5rem;"
+              oninput="syncErrorInputs('input')"
+              onkeydown="if(event.key==='Enter') runErrorDiag()" />
+            <button onclick="document.getElementById('error-input').value=''; syncErrorInputs('input');"
+              style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; font-size:1rem; line-height:1; padding:2px 4px;"
+              title="지우기">✕</button>
+          </div>
+        </div>
+
+        <!-- 구분선 -->
+        <div style="display:flex; align-items:center; gap:8px; margin:0.9rem 0;">
+          <div style="flex:1; height:1px; background:var(--border);"></div>
+          <span style="font-size:0.72rem; color:var(--muted); font-weight:600; letter-spacing:0.06em;">또는 목록에서 선택</span>
+          <div style="flex:1; height:1px; background:var(--border);"></div>
+        </div>
+
+        <!-- 드롭다운 선택 -->
+        <div style="margin-bottom:1rem;">
+          <select id="error-code" onchange="syncErrorInputs('select')">
+            <option value="">-- 자주 묻는 오류 코드 --</option>
+            <optgroup label="발로란트 (VALORANT)">
+              <option value="VAN9003">VAN9003 — TPM 2.0 / Secure Boot 오류</option>
+              <option value="VAN1067">VAN1067 — Vanguard 드라이버 오류</option>
+              <option value="VAN6">VAN6 — 서비스 미실행</option>
+            </optgroup>
+            <optgroup label="배틀그라운드 (PUBG)">
+              <option value="PUBG_BE">BattlEye 우회 감지</option>
+              <option value="PUBG_CRASH">EXCEPTION_ACCESS_VIOLATION 크래시</option>
+            </optgroup>
+            <optgroup label="일반 윈도우 / DirectX">
+              <option value="DX12_CRASH">DirectX 12 크래시 (DXGI_ERROR)</option>
+              <option value="VCREDIST">Visual C++ 런타임 오류</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- 메인보드 제조사 -->
+        <div style="margin-bottom:1.25rem;">
+          <label style="font-size:0.8rem; color:var(--muted); font-weight:600; letter-spacing:0.06em; display:block; margin-bottom:6px;">메인보드 제조사 <span style="font-weight:400;">(선택 — BIOS 가이드 포함)</span></label>
+          <select id="mobo-brand">
+            <option value="">-- 선택 안 함 --</option>
+            <option value="ASUS">ASUS (ROG / TUF / Prime)</option>
+            <option value="Gigabyte">Gigabyte (AORUS / AERO)</option>
+            <option value="MSI">MSI (MEG / MAG / MPG)</option>
+            <option value="ASRock">ASRock</option>
+            <option value="Biostar">Biostar</option>
+          </select>
+        </div>
+
+        <button class="btn-primary" style="width:100%;" onclick="runErrorDiag()">🔧 해결법 안내받기</button>
+      </div>
+
+      <!-- 빠른 선택 태그 -->
+      <div class="card" style="margin-top:1rem;">
+        <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px; font-weight:600;">⚡ 악명 높은 오류 빠른 선택</p>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+          <span class="game-tag" onclick="quickError('VAN9003')">VAN9003</span>
+          <span class="game-tag" onclick="quickError('VAN1067')">VAN1067</span>
+          <span class="game-tag" onclick="quickError('VAN6')">VAN6</span>
+          <span class="game-tag" onclick="quickError('DX12_CRASH')">DX12 크래시</span>
+          <span class="game-tag" onclick="quickError('PUBG_CRASH')">PUBG 크래시</span>
+          <span class="game-tag" onclick="quickError('VCREDIST')">VC++ 오류</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:1.5; min-width:280px;" id="error-result-area">
+      <div class="card" style="min-height:340px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:1rem; border-style:dashed;">
+        <div style="font-size:2.5rem; opacity:0.15;">🔧</div>
+        <p style="color:var(--muted); font-size:0.9rem; text-align:center; line-height:1.8;">
+          오류 코드를 <strong style="color:var(--text);">직접 입력</strong>하거나<br>목록에서 선택 후 안내받기를 눌러주세요
+        </p>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center;">
+          <span class="badge badge-green" style="font-size:0.7rem;">✓ DB 내장 즉시 해결</span>
+          <span class="badge badge-blue"  style="font-size:0.7rem;">✓ 미등록 오류 AI 분석</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============================== -->
+<!-- TAB 3: 사운드 트러블슈팅 -->
+<!-- =============================== -->
+<section id="section-sound" class="section">
+  <div style="margin-bottom:2rem;">
+    <div class="badge badge-blue" style="margin-bottom:0.75rem;">사운드 진단 트리</div>
+    <h1 class="font-display" style="font-size:clamp(1.8rem,4vw,2.8rem); letter-spacing:2px; margin-bottom:0.5rem;">
+      마이크 & 사운드 <span style="color:#50A0FF;">트러블슈팅</span>
+    </h1>
+    <p style="color:var(--muted); font-size:0.9rem;">증상에 체크하면 원인을 추적하고 윈도우 설정 해결법을 안내합니다.</p>
+  </div>
+
+  <div style="display:flex; gap:1.5rem; flex-wrap:wrap;" class="two-col">
+    <div style="flex:1; min-width:280px;">
+      <div class="card">
+        <h2 style="font-size:1rem; font-weight:700; margin-bottom:1.25rem;">🩺 증상 체크리스트</h2>
+
+        <div style="display:flex; flex-direction:column; gap:14px; margin-bottom:1.5rem;">
+          <label class="diag-check">
+            <input type="checkbox" id="sym-noise" />
+            <div>
+              <p style="font-size:0.9rem; font-weight:500;">지지직거리는 잡음(노이즈)이 들린다</p>
+              <p style="font-size:0.78rem; color:var(--muted);">마이크 사용 시 배경 노이즈, 험(Hum) 소리</p>
+            </div>
+          </label>
+          <label class="diag-check">
+            <input type="checkbox" id="sym-silent" />
+            <div>
+              <p style="font-size:0.9rem; font-weight:500;">소리가 아예 안 난다 (먹통)</p>
+              <p style="font-size:0.78rem; color:var(--muted);">헤드셋/이어폰/스피커에서 아무 소리도 없음</p>
+            </div>
+          </label>
+          <label class="diag-check">
+            <input type="checkbox" id="sym-echo" />
+            <div>
+              <p style="font-size:0.9rem; font-weight:500;">내 목소리가 울리거나 에코가 들린다</p>
+              <p style="font-size:0.78rem; color:var(--muted);">디스코드, 게임에서 내 목소리가 메아리처럼 들림</p>
+            </div>
+          </label>
+          <label class="diag-check">
+            <input type="checkbox" id="sym-mic-none" />
+            <div>
+              <p style="font-size:0.9rem; font-weight:500;">마이크가 아예 인식이 안 된다</p>
+              <p style="font-size:0.78rem; color:var(--muted);">디스코드/게임에서 입력 장치 목록에 없음</p>
+            </div>
+          </label>
+          <label class="diag-check">
+            <input type="checkbox" id="sym-volume" />
+            <div>
+              <p style="font-size:0.9rem; font-weight:500;">마이크 볼륨이 너무 낮거나 끊긴다</p>
+              <p style="font-size:0.78rem; color:var(--muted);">상대방이 내 목소리를 잘 못 듣는다</p>
+            </div>
+          </label>
+          <label class="diag-check">
+            <input type="checkbox" id="sym-discord" />
+            <div>
+              <p style="font-size:0.9rem; font-weight:500;">특정 앱(디스코드)에서만 문제 발생</p>
+              <p style="font-size:0.78rem; color:var(--muted);">다른 앱에서는 정상인데 특정 앱만 문제</p>
+            </div>
+          </label>
+        </div>
+
+        <button class="btn-primary" style="width:100%;" onclick="runSoundDiag()">🎙 진단 시작</button>
+        <button onclick="clearSound()" style="width:100%; margin-top:8px; background:transparent; border:1px solid var(--border); color:var(--muted); padding:0.6rem; border-radius:8px; cursor:pointer; font-family:inherit; font-size:0.85rem; transition:all 0.2s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">초기화</button>
+      </div>
+    </div>
+
+    <div style="flex:1.5; min-width:280px;" id="sound-result-area">
+      <div class="card" style="min-height:300px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:1rem; border-style:dashed;">
+        <div style="font-size:2.5rem; opacity:0.2;">🎙</div>
+        <p style="color:var(--muted); font-size:0.9rem; text-align:center;">증상을 선택하고<br>진단 시작을 눌러주세요</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+<footer style="border-top:1px solid var(--border); padding:1.5rem; margin-top:3rem; text-align:center; position:relative; z-index:1;">
+  <p style="font-size:0.75rem; color:var(--muted); line-height:1.8;">
+    <span class="font-display" style="color:var(--accent); letter-spacing:1px;">GEARWIZ</span> — 이 페이지의 일부 링크는 제휴 마케팅 링크로, 구매 시 소정의 수수료를 받을 수 있습니다.<br>
+    가격 정보는 실시간이 아니며 변동될 수 있습니다. 구매 전 최저가를 반드시 확인하세요.<br>
+    <span style="font-size:0.7rem; opacity:0.6;">© 2025 GearWiz. All rights reserved.</span>
+  </p>
+</footer>
+
+<script>
+// ============================================================
+// ★ 제휴 링크 매핑 — 여기만 수정하면 전체 링크가 바뀝니다 ★
+// ============================================================
+const AFFILIATE_LINKS = {
+  /* PC 견적 */
+  "BUILD_BUDGET_30":    "#",  // 30-50만원 빌드 링크
+  "BUILD_BUDGET_50":    "#",  // 50-80만원 빌드 링크
+  "BUILD_MID_100":      "#",  // 100-150만원 미드레인지
+  "BUILD_MID_150":      "#",  // 150-200만원 미드-하이
+  "BUILD_HIGH_200":     "#",  // 200만원+ 하이엔드
+  /* 마이크 */
+  "MIC_HYPERX_SOLOCAST":"#",
+  "MIC_BLUE_YETI_NANO": "#",
+  "MIC_AT2020":         "#",
+  "MIC_RODE_NT_USB":    "#",
+  /* 헤드셋 */
+  "HEADSET_HYPERX_CLOUD2":"#",
+  "HEADSET_STEELSERIES_ARCTIS3":"#",
+  "HEADSET_CORSAIR_HS55":"#",
+  "HEADSET_RAZER_BLACKSHARK":"#",
+  /* 이어폰 */
+  "EAR_KZ_ZSN_PRO":    "#",
+  "EAR_BLON_BL03":     "#",
+  "EAR_MOONDROP_ARIA":  "#",
+  "EAR_SENNHEISER_IE200":"#",
+  /* 키보드 */
+  "KB_AKKO_3068B":     "#",
+  "KB_ROYAL_KLUDGE_RK84":"#",
+  "KB_DUCKY_ONE3":     "#",
+  "KB_CORSAIR_K70":    "#",
+};
+
+// ============================================================
+// 상품 데이터베이스 (JavaScript 내장 DB)
+// ============================================================
+const PRODUCTS = {
+  pc: [
+    {
+      id: "BUILD_BUDGET_30",
+      tier: "엔트리", priceMin: 30, priceMax: 55,
+      name: "라이젠 5 5500 + RX 6600 빌드",
+      specs: {
+        "CPU": "AMD Ryzen 5 5500 (6C/12T)",
+        "GPU": "AMD Radeon RX 6600 8GB",
+        "RAM": "DDR4 16GB (3200MHz)",
+        "SSD": "500GB NVMe",
+        "메인보드": "B450M DS3H (마이크로ATX)",
+        "파워": "650W 80+ Bronze",
+      },
+      score: 89,
+      games: {
+        "발로란트":       { fps: "FHD 풀옵 144Hz+ 안정", bar: 95, badge: "green" },
+        "리그오브레전드": { fps: "FHD 풀옵 144Hz+ 안정", bar: 96, badge: "green" },
+        "에이펙스레전드": { fps: "FHD 높음 옵션 100~120fps", bar: 80, badge: "green" },
+        "오버워치2":      { fps: "FHD 높음 옵 100~130fps", bar: 82, badge: "green" },
+        "배틀그라운드":   { fps: "FHD 중간 옵션 60~80fps", bar: 60, badge: "yellow" },
+        "마인크래프트":   { fps: "바닐라 무한, 쉐이더 타협 필요", bar: 70, badge: "yellow" },
+        "사이버펑크2077": { fps: "FHD 낮음~중간 옵션 40~55fps", bar: 38, badge: "red" },
+        "스팀VR":         { fps: "VR 미지원 권장", bar: 15, badge: "red" },
+        "default":        { fps: "라이트 게임 FHD 쾌적, AAA는 옵션 타협 필요", bar: 68, badge: "yellow" },
+      }
+    },
+    {
+      id: "BUILD_BUDGET_50",
+      tier: "가성비", priceMin: 55, priceMax: 90,
+      name: "라이젠 5 7600 + RTX 4060 빌드",
+      specs: {
+        "CPU": "AMD Ryzen 5 7600 (6C/12T)",
+        "GPU": "NVIDIA RTX 4060 8GB",
+        "RAM": "DDR5 16GB (4800MHz)",
+        "SSD": "1TB NVMe Gen4",
+        "메인보드": "B650M Pro RS",
+        "파워": "750W 80+ Gold",
+      },
+      score: 94,
+      games: {
+        "발로란트":       { fps: "FHD 풀옵 300fps+ 가능", bar: 99, badge: "green" },
+        "리그오브레전드": { fps: "FHD 풀옵 240fps+ 가능", bar: 99, badge: "green" },
+        "에이펙스레전드": { fps: "FHD 최고 옵 140~160fps", bar: 92, badge: "green" },
+        "오버워치2":      { fps: "FHD 최고 옵 150~200fps", bar: 95, badge: "green" },
+        "배틀그라운드":   { fps: "FHD 울트라 옵 80~100fps", bar: 78, badge: "green" },
+        "마인크래프트":   { fps: "쉐이더 포함 쾌적 60fps+", bar: 88, badge: "green" },
+        "사이버펑크2077": { fps: "FHD 중간~높음 45~60fps (DLSS 활용 시 쾌적)", bar: 62, badge: "yellow" },
+        "스팀VR":         { fps: "VR 기본 구동 가능", bar: 55, badge: "yellow" },
+        "default":        { fps: "대부분의 게임 FHD 쾌적 플레이, AAA 최고옵 타협", bar: 82, badge: "green" },
+      }
+    },
+    {
+      id: "BUILD_MID_100",
+      tier: "미드레인지", priceMin: 90, priceMax: 150,
+      name: "인텔 i5-14600K + RTX 4070 빌드",
+      specs: {
+        "CPU": "Intel Core i5-14600K (14C/20T)",
+        "GPU": "NVIDIA RTX 4070 12GB",
+        "RAM": "DDR5 32GB (6000MHz)",
+        "SSD": "1TB NVMe Gen4 + 2TB HDD",
+        "메인보드": "Z790 Pro RS",
+        "파워": "850W 80+ Gold",
+      },
+      score: 96,
+      games: {
+        "발로란트":       { fps: "FHD 풀옵 500fps 잠금 해제", bar: 100, badge: "green" },
+        "리그오브레전드": { fps: "FHD 풀옵 240fps+ 완벽", bar: 100, badge: "green" },
+        "에이펙스레전드": { fps: "FHD 최고 옵 180~200fps", bar: 97, badge: "green" },
+        "오버워치2":      { fps: "FHD 최고 옵 240fps 방어", bar: 99, badge: "green" },
+        "배틀그라운드":   { fps: "FHD 울트라 100~120fps", bar: 90, badge: "green" },
+        "마인크래프트":   { fps: "극한 쉐이더 60fps+ 쾌적", bar: 95, badge: "green" },
+        "사이버펑크2077": { fps: "FHD 최고 옵 60~75fps, DLSS 시 90fps+", bar: 80, badge: "green" },
+        "스팀VR":         { fps: "VR 권장 사양 충족, 대부분 타이틀 쾌적", bar: 80, badge: "green" },
+        "default":        { fps: "거의 모든 게임 FHD 최고 옵 쾌적 플레이", bar: 93, badge: "green" },
+      }
+    },
+    {
+      id: "BUILD_MID_150",
+      tier: "하이", priceMin: 150, priceMax: 220,
+      name: "인텔 i7-14700K + RTX 4070 Ti SUPER 빌드",
+      specs: {
+        "CPU": "Intel Core i7-14700K (20C/28T)",
+        "GPU": "NVIDIA RTX 4070 Ti SUPER 16GB",
+        "RAM": "DDR5 32GB (6400MHz)",
+        "SSD": "2TB NVMe Gen4",
+        "메인보드": "Z790 Aorus Elite AX",
+        "파워": "1000W 80+ Gold",
+      },
+      score: 97,
+      games: {
+        "발로란트":       { fps: "모든 해상도 프레임 한계 도달", bar: 100, badge: "green" },
+        "리그오브레전드": { fps: "모든 해상도 프레임 한계 도달", bar: 100, badge: "green" },
+        "에이펙스레전드": { fps: "FHD 풀옵 200fps+ 완벽", bar: 100, badge: "green" },
+        "오버워치2":      { fps: "2K QHD 풀옵 240fps 방어", bar: 100, badge: "green" },
+        "배틀그라운드":   { fps: "2K 울트라 120fps+", bar: 95, badge: "green" },
+        "마인크래프트":   { fps: "4K 쉐이더 쾌적", bar: 99, badge: "green" },
+        "사이버펑크2077": { fps: "2K 최고 옵 RT 포함 60fps+", bar: 90, badge: "green" },
+        "스팀VR":         { fps: "하이엔드 VR 타이틀 쾌적", bar: 92, badge: "green" },
+        "default":        { fps: "4K 게이밍까지 커버, 최고 성능", bar: 97, badge: "green" },
+      }
+    },
+    {
+      id: "BUILD_HIGH_200",
+      tier: "하이엔드", priceMin: 220, priceMax: 999,
+      name: "인텔 i9-14900K + RTX 4090 빌드",
+      specs: {
+        "CPU": "Intel Core i9-14900K (24C/32T)",
+        "GPU": "NVIDIA RTX 4090 24GB",
+        "RAM": "DDR5 64GB (7200MHz)",
+        "SSD": "4TB NVMe Gen5",
+        "메인보드": "Z790 Aorus Master",
+        "파워": "1200W 80+ Platinum",
+      },
+      score: 99,
+      games: {
+        "발로란트":       { fps: "오버킬. 4K도 프레임 한계", bar: 100, badge: "green" },
+        "리그오브레전드": { fps: "오버킬. 4K도 프레임 한계", bar: 100, badge: "green" },
+        "에이펙스레전드": { fps: "4K 최고 옵 200fps+", bar: 100, badge: "green" },
+        "오버워치2":      { fps: "4K 최고 옵 300fps+", bar: 100, badge: "green" },
+        "배틀그라운드":   { fps: "4K 울트라 144fps+", bar: 100, badge: "green" },
+        "마인크래프트":   { fps: "4K 극한 쉐이더 무제한", bar: 100, badge: "green" },
+        "사이버펑크2077": { fps: "4K 최고 옵 RT 포함 100fps+", bar: 100, badge: "green" },
+        "스팀VR":         { fps: "최고 해상도 VR 완벽", bar: 100, badge: "green" },
+        "default":        { fps: "지구상 모든 게임 최고 옵 4K 쾌적", bar: 100, badge: "green" },
+      }
+    },
+  ],
+  mic: [
+    { id:"MIC_HYPERX_SOLOCAST", priceMin:5, priceMax:8, name:"HyperX SoloCast", desc:"USB 심카디오이드, 설정 없이 바로 사용", tag:"입문 추천", score:90 },
+    { id:"MIC_BLUE_YETI_NANO",  priceMin:8, priceMax:13, name:"Blue Yeti Nano", desc:"USB, 2가지 지향성 패턴, 컴팩트 디자인", tag:"가성비 베스트", score:93 },
+    { id:"MIC_AT2020",          priceMin:12, priceMax:20, name:"Audio-Technica AT2020 USB+", desc:"컨덴서 마이크, 방송 음질, 헤드폰 모니터링", tag:"방송급", score:95 },
+    { id:"MIC_RODE_NT_USB",     priceMin:18, priceMax:30, name:"Rode NT-USB Mini", desc:"컨덴서, 내장 믹서, 풍부한 저역대", tag:"프리미엄", score:96 },
+  ],
+  headset: [
+    { id:"HEADSET_HYPERX_CLOUD2",         priceMin:7,  priceMax:12, name:"HyperX Cloud II", desc:"7.1 가상 서라운드, 가죽 이어패드, 내구성 최강", tag:"가성비 국민", score:92 },
+    { id:"HEADSET_STEELSERIES_ARCTIS3",   priceMin:6,  priceMax:10, name:"SteelSeries Arctis 3", desc:"Ski goggle 밴드, 클리어캐스트 마이크", tag:"편안함 최고", score:91 },
+    { id:"HEADSET_CORSAIR_HS55",          priceMin:8,  priceMax:13, name:"Corsair HS55 Stereo", desc:"가벼운 무게, 메모리폼 이어패드", tag:"경량 추천", score:89 },
+    { id:"HEADSET_RAZER_BLACKSHARK",      priceMin:15, priceMax:25, name:"Razer BlackShark V2 Pro", desc:"무선 HyperSpeed, 무선 지연 최소화", tag:"무선 베스트", score:94 },
+  ],
+  earphone: [
+    { id:"EAR_KZ_ZSN_PRO",       priceMin:1, priceMax:3, name:"KZ ZSN Pro X", desc:"하이브리드 드라이버, 입문용 최고 가성비", tag:"1만원대 필수", score:88 },
+    { id:"EAR_BLON_BL03",        priceMin:2, priceMax:4, name:"BLON BL-03", desc:"10mm 카본 진동판, 해상도 탁월", tag:"커뮤니티 픽", score:90 },
+    { id:"EAR_MOONDROP_ARIA",    priceMin:7, priceMax:12, name:"Moondrop Aria", desc:"하르만 타겟 튜닝, 깔끔한 음색", tag:"프리미엄 입문", score:94 },
+    { id:"EAR_SENNHEISER_IE200", priceMin:12, priceMax:20, name:"Sennheiser IE 200", desc:"독일 플래그십 하우스 사운드", tag:"하이파이", score:96 },
+  ],
+  keyboard: [
+    { id:"KB_ROYAL_KLUDGE_RK84", priceMin:4, priceMax:7, name:"Royal Kludge RK84", desc:"75% 배열, 무선/유선, 핫스왑 지원", tag:"가성비 국민", score:90 },
+    { id:"KB_AKKO_3068B",        priceMin:6, priceMax:10, name:"Akko 3068B Plus", desc:"무선, 가스켓 마운트, 커스텀급 타건음", tag:"커뮤니티 픽", score:93 },
+    { id:"KB_DUCKY_ONE3",        priceMin:12, priceMax:18, name:"Ducky One 3", desc:"풀 RGB, 다양한 축 선택, 내구성", tag:"정평난 퀄리티", score:95 },
+    { id:"KB_CORSAIR_K70",       priceMin:15, priceMax:25, name:"Corsair K70 RGB Pro", desc:"Cherry MX 축, 알루미늄 프레임, iCUE 지원", tag:"프리미엄", score:94 },
+  ],
+};
+
+// ============================================================
+// 오류 진단 데이터베이스
+// ============================================================
+const ERROR_DB = {
+  VAN9003: {
+    title: "VAN9003 — TPM 2.0 / Secure Boot 미활성화",
+    desc: "발로란트의 안티치트 Vanguard는 TPM 2.0과 Secure Boot가 BIOS에서 활성화되어 있어야 실행됩니다.",
+    severity: "high",
+    commonCause: "PC 초기화, 듀얼부팅 설정, 또는 BIOS 업데이트 후 설정 초기화",
+    steps: {
+      general: [
+        "윈도우 시작 메뉴 → '설정' → '업데이트 및 보안' → '복구' → '지금 다시 시작(고급 시작)' 클릭",
+        "'문제 해결' → '고급 옵션' → 'UEFI 펌웨어 설정' → '다시 시작'으로 BIOS 진입",
+        "BIOS에서 Secure Boot 활성화 (제조사별 경로 아래 참조)",
+        "BIOS에서 TPM 2.0 활성화 (제조사별 명칭 다름 — 아래 참조)",
+        "F10(저장 후 종료) → 윈도우 부팅 → 발로란트 재실행",
+      ],
+      ASUS: {
+        biosKey: "DEL 또는 F2",
+        secureBoot: "Advanced Mode(F7) → Security → Secure Boot → Enabled",
+        tpm: "Advanced Mode → Advanced → PCH-FW Configuration → PTT(= TPM 2.0) → Enabled",
+        tip: "AI Tweaker에서 AMD CPU라면 fTPM, Intel이라면 PTT 항목을 찾아 활성화",
+      },
+      Gigabyte: {
+        biosKey: "DEL",
+        secureBoot: "Settings → Miscellaneous → Secure Boot → Enabled (Standard/Custom)",
+        tpm: "Settings → Miscellaneous → AMD CPU → fTPM switch → AMD CPU fTPM / Intel → Trusted Computing → TPM 2.0",
+        tip: "Save & Exit(F10) 후 재진입해야 Secure Boot 모드가 완전히 적용",
+      },
+      MSI: {
+        biosKey: "DEL",
+        secureBoot: "Settings → Security → Secure Boot → Secure Boot Support → Enabled",
+        tpm: "Settings → Security → Trusted Computing → Security Device Support → Enable → TPM Device Selection → Firmware TPM",
+        tip: "모드를 Standard로 설정 후 저장. Windows 10 이전 설치된 경우 DB 초기화 필요할 수 있음",
+      },
+      ASRock: {
+        biosKey: "F2 또는 DEL",
+        secureBoot: "Security → Secure Boot → Secure Boot → Enabled",
+        tpm: "Advanced → CPU Configuration → AMD fTPM switch → AMD CPU fTPM",
+        tip: "Secure Boot Mode를 Standard에서 Custom으로 변경 후 DB 초기화 시도",
+      },
+      Biostar: {
+        biosKey: "DEL",
+        secureBoot: "Security → Secure Boot → Enabled",
+        tpm: "Advanced → Trusted Computing → TPM Support → Enabled",
+        tip: "BIOS 버전이 오래된 경우 제조사 공식 사이트에서 최신 BIOS 업데이트 권장",
+      },
+    }
+  },
+  VAN1067: {
+    title: "VAN1067 — Vanguard 드라이버 충돌",
+    desc: "다른 안티치트 또는 커널 드라이버와 Vanguard가 충돌하는 오류입니다.",
+    severity: "medium",
+    commonCause: "Faceit/EasyAntiCheat/다른 게임의 잔여 드라이버",
+    steps: {
+      general: [
+        "작업 관리자(Ctrl+Shift+Esc) → 서비스 탭 → 'vgc' 또는 'vgk' 서비스 확인 후 중지",
+        "제어판 → 프로그램 제거 → 발로란트, Riot Vanguard 모두 제거",
+        "C:\\Program Files\\Riot Vanguard 폴더 수동 삭제",
+        "PC 재시작 후 발로란트 공식 사이트에서 설치 파일 재다운로드 및 설치",
+        "설치 완료 후 PC 재시작 → Vanguard 아이콘(트레이) 확인 후 게임 실행",
+      ],
+    }
+  },
+  VAN6: {
+    title: "VAN6 — Vanguard 서비스 미실행",
+    desc: "Vanguard 서비스가 시작 시 자동으로 실행되지 않는 문제입니다.",
+    severity: "low",
+    commonCause: "서비스 시작 유형이 수동으로 변경됨",
+    steps: {
+      general: [
+        "Win+R → services.msc 입력 후 엔터",
+        "서비스 목록에서 'vgc' 찾기",
+        "더블클릭 → 시작 유형을 '자동'으로 변경",
+        "서비스 시작 버튼 클릭 → 확인",
+        "PC 재시작 후 발로란트 실행",
+      ],
+    }
+  },
+  PUBG_BE: {
+    title: "BattlEye 우회 감지 (PUBG)",
+    desc: "BattlEye가 비정상적인 프로그램이나 프로세스를 감지했습니다.",
+    severity: "high",
+    commonCause: "매크로 프로그램, 오버레이 앱, 튜닝 소프트웨어 충돌",
+    steps: {
+      general: [
+        "Xbox Game Bar, MSI Afterburner, Discord 오버레이 등 오버레이 앱 모두 종료",
+        "Steam → 라이브러리 → PUBG 우클릭 → 속성 → 로컬 파일 → '게임 파일 무결성 검사'",
+        "바이러스 백신 실시간 보호 일시 중지 후 게임 실행 테스트",
+        "작업 관리자에서 불필요한 백그라운드 앱 전부 종료 후 재시도",
+        "문제 지속 시 BattlEye 공식 지원 페이지에서 런처 재설치",
+      ],
+    }
+  },
+  PUBG_CRASH: {
+    title: "EXCEPTION_ACCESS_VIOLATION 메모리 크래시 (PUBG)",
+    desc: "RAM 불안정, 드라이버 문제, 또는 게임 파일 손상이 원인입니다.",
+    severity: "medium",
+    commonCause: "RAM 오버클록, 구식 드라이버, 게임 파일 손상",
+    steps: {
+      general: [
+        "BIOS에서 XMP/EXPO 프로파일 비활성화(RAM 기본 속도로 실행) 후 테스트",
+        "NVIDIA: DDU 사용 후 최신 드라이버 클린 설치 / AMD: AMD Cleanup Utility 후 재설치",
+        "Steam 게임 파일 무결성 검사 실행",
+        "윈도우 메모리 진단(Win+R → mdsched) 실행으로 RAM 이상 여부 확인",
+        "PageFile(가상 메모리) 크기: 시스템 관리 자동 설정으로 변경",
+      ],
+    }
+  },
+  DX12_CRASH: {
+    title: "DXGI_ERROR_DEVICE_HUNG / DirectX 12 크래시",
+    desc: "GPU 드라이버 혹은 DirectX 버전 문제로 화면이 멈추거나 게임이 꺼집니다.",
+    severity: "medium",
+    commonCause: "구식 GPU 드라이버, TDR 타임아웃, 불안정한 오버클록",
+    steps: {
+      general: [
+        "GPU 드라이버 최신 버전으로 업데이트 (NVIDIA GeForce Experience / AMD Adrenaline)",
+        "GPU 오버클록 소프트웨어(MSI Afterburner 등) 클럭/전압 기본값으로 초기화",
+        "Win+R → regedit → HKLM\\System\\CurrentControlSet\\Control\\GraphicsDrivers 경로 → TdrDelay 값을 8로 수정(없으면 DWORD 새로 생성)",
+        "게임 설정에서 DirectX 12 → DirectX 11로 변경 후 테스트",
+        "윈도우 업데이트 최신 상태로 유지",
+      ],
+    }
+  },
+  VCREDIST: {
+    title: "Visual C++ 런타임 오류",
+    desc: "Microsoft Visual C++ 재배포 패키지가 손상되거나 누락된 경우입니다.",
+    severity: "low",
+    commonCause: "재배포 패키지 미설치 또는 손상",
+    steps: {
+      general: [
+        "Microsoft 공식 사이트에서 Visual C++ 재배포 패키지 x64/x86 모두 다운로드",
+        "기존 Visual C++ 패키지 모두 제거 후 최신 버전 재설치",
+        "제어판 → 프로그램 → Visual C++ 항목 우클릭 → 복구 클릭",
+        "윈도우 SFC 스캔: 관리자 CMD → sfc /scannow 입력 후 완료까지 대기",
+        "재시작 후 게임 재실행",
+      ],
+    }
+  },
+};
+
+// ============================================================
+// 사운드 트러블슈팅 데이터베이스
+// ============================================================
+const SOUND_SOLUTIONS = {
+  noise: {
+    title: "🔊 잡음(노이즈) 제거 가이드",
+    badge: "badge-yellow",
+    color: "#FFC800",
+    steps: [
+      { title: "마이크 향상 기능 비활성화", desc: "Win+R → mmsys.cpl → 녹음 탭 → 마이크 더블클릭 → 향상 탭 → '모든 향상 기능 사용 안 함' 체크 → 적용" },
+      { title: "전용 마이크 모드 활성화", desc: "녹음 탭 → 마이크 더블클릭 → 고급 탭 → '응용 프로그램에서 이 장치를 단독으로 제어 허용' 체크" },
+      { title: "USB 포트 변경", desc: "USB 마이크라면 다른 USB 포트(가급적 후면 포트)로 변경. 전면 USB는 내부 노이즈에 취약" },
+      { title: "디스코드 노이즈 억제 비활성화", desc: "디스코드 → 설정 → 음성 및 비디오 → 고급 오디오 → Krisp 노이즈 억제 → 끄기 (역설적으로 노이즈를 추가할 때 있음)" },
+      { title: "접지 문제 확인", desc: "PC 케이스 접지 불량 시 험(Hum) 노이즈 발생. 3구 콘센트 사용 및 멀티탭 교체 시도. USB 오디오 인터페이스 사용 권장" },
+    ]
+  },
+  silent: {
+    title: "🔇 소리 먹통 해결 가이드",
+    badge: "badge-red",
+    color: "#FF3C5F",
+    steps: [
+      { title: "기본 출력 장치 확인", desc: "작업 표시줄 스피커 아이콘 우클릭 → 소리 설정 → 출력 장치가 올바른 헤드셋/스피커로 설정되어 있는지 확인" },
+      { title: "볼륨 믹서 개별 앱 확인", desc: "스피커 아이콘 우클릭 → 볼륨 믹서 열기 → 게임/디스코드 등 앱별 볼륨이 0인지 확인 후 조절" },
+      { title: "드라이버 재설치", desc: "장치 관리자(Win+X) → 사운드, 비디오 및 게임 컨트롤러 → 장치 우클릭 → 드라이버 업데이트 또는 제거 후 PC 재시작" },
+      { title: "오디오 서비스 재시작", desc: "Win+R → services.msc → 'Windows Audio' 서비스 우클릭 → 다시 시작. 종속 서비스 'Windows Audio Endpoint Builder'도 재시작" },
+      { title: "하드웨어 확인", desc: "다른 기기(폰 등)에 헤드셋 연결 테스트. 정상 작동 시 PC 문제, 안 되면 헤드셋 불량" },
+    ]
+  },
+  echo: {
+    title: "🔁 에코/울림 제거 가이드",
+    badge: "badge-blue",
+    color: "#50A0FF",
+    steps: [
+      { title: "스테레오 믹스 비활성화", desc: "Win+R → mmsys.cpl → 녹음 탭 → 마우스 우클릭으로 '사용 안 함 장치 표시' → '스테레오 믹스' 우클릭 → 사용 안 함" },
+      { title: "에코 제거 기능 켜기", desc: "마이크 더블클릭 → 향상 탭 → '에코 소거' 체크 활성화 (일부 구형 드라이버에는 없을 수 있음)" },
+      { title: "디스코드 에코 제거", desc: "디스코드 → 설정 → 음성 및 비디오 → 에코 제거 → Standard 또는 Experimental로 설정" },
+      { title: "출력-입력 장치 분리", desc: "헤드셋과 스피커를 동시 사용 중이라면 스피커 음량을 낮추거나 헤드셋으로 통일. 오픈형 헤드폰 사용 시 마이크에 소리 유입됨" },
+    ]
+  },
+  mic_none: {
+    title: "🎙 마이크 미인식 해결 가이드",
+    badge: "badge-red",
+    color: "#FF3C5F",
+    steps: [
+      { title: "개인 정보 설정 확인 (핵심!)", desc: "Win → 설정 → 개인 정보 및 보안 → 마이크 → 앱에서 마이크에 액세스 허용 → 켬. 데스크톱 앱 접근도 켬" },
+      { title: "연결 포트 확인", desc: "헤드셋 마이크는 분리된 3.5mm 단자(핑크색)에 연결. 콤보 단자 헤드셋이라면 4극 어댑터 사용 필요" },
+      { title: "기본 장치 설정", desc: "Win+R → mmsys.cpl → 녹음 탭 → 마이크 우클릭 → '기본 장치로 설정' → '기본 통신 장치로 설정' 모두 적용" },
+      { title: "앱별 입력 장치 재선택", desc: "디스코드 → 설정 → 음성 → 입력 장치를 '기본값' 대신 마이크 이름 직접 선택. 게임 인게임 설정도 동일하게 변경" },
+      { title: "드라이버 재설치", desc: "Realtek 오디오: 장치 관리자에서 제거 후 메인보드 제조사 사이트에서 최신 오디오 드라이버 수동 설치" },
+    ]
+  },
+  volume: {
+    title: "📊 마이크 볼륨 개선 가이드",
+    badge: "badge-yellow",
+    color: "#FFC800",
+    steps: [
+      { title: "마이크 볼륨/부스트 조절", desc: "Win+R → mmsys.cpl → 녹음 탭 → 마이크 더블클릭 → 수준 탭 → 볼륨 100으로, 마이크 부스트 +20~30dB 설정" },
+      { title: "AGC(자동 이득 제어) 비활성화", desc: "향상 탭 → 자동 이득 제어 → 체크 해제. AGC가 볼륨을 임의로 낮추는 경우가 있음" },
+      { title: "디스코드 입력 감도", desc: "디스코드 → 설정 → 음성 → '입력 감도' 자동 → 수동으로 변경 후 슬라이더 오른쪽으로 조절" },
+      { title: "물리적 점검", desc: "마이크와 입의 거리가 너무 멀거나, 지향성 마이크의 정확한 방향 확인. 팝 필터/풍막이 제거 후 테스트" },
+    ]
+  },
+  discord: {
+    title: "💬 디스코드 전용 사운드 가이드",
+    badge: "badge-blue",
+    color: "#50A0FF",
+    steps: [
+      { title: "디스코드 오디오 서브시스템 변경", desc: "디스코드 → 설정 → 음성 및 비디오 → 오디오 서브시스템 → Standard 대신 Legacy 또는 Experimental로 변경" },
+      { title: "독점 모드 비활성화", desc: "디스코드 설정 → 고급 → OpenAL, 독점 모드 활성화 → 해제 시도" },
+      { title: "디스코드 캐시 초기화", desc: "Win+R → %appdata%\\discord → Cache, Code Cache, GPUCache 폴더 삭제 후 디스코드 재실행" },
+      { title: "디스코드 재설치", desc: "제어판에서 완전 제거 → %appdata%\\discord 폴더 수동 삭제 → 공식 사이트에서 재설치" },
+    ]
+  },
+};
+
+// ============================================================
+// 탭 전환
+// ============================================================
+function switchTab(tab) {
+  ['wizard','error','sound'].forEach(t => {
+    document.getElementById(`section-${t}`).classList.toggle('active', t === tab);
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+  });
+}
+
+// ============================================================
+// 예산 슬라이더 업데이트
+// ============================================================
+function updateBudget() {
+  const v = parseInt(document.getElementById('budget-slider').value);
+  document.getElementById('budget-display').textContent = `${v}만원`;
+}
+
+// 게임 태그 토글 → 파일 하단 이벤트 위임으로 처리 (중복 바인딩 제거)
+
+// ============================================================
+// 주변기기 체크박스 토글
+// ============================================================
+let peripheralEnabled = false;
+function togglePeripheral() {
+  peripheralEnabled = !peripheralEnabled;
+  const toggle = document.getElementById('peri-toggle');
+  const knob   = document.getElementById('peri-knob');
+  const opts   = document.getElementById('peri-options');
+  toggle.style.background = peripheralEnabled ? 'var(--accent)' : 'var(--surface3)';
+  knob.style.background   = peripheralEnabled ? '#0A0C10' : 'var(--muted)';
+  knob.style.left         = peripheralEnabled ? '23px' : '3px';
+  opts.style.display      = peripheralEnabled ? 'block' : 'none';
+}
+
+// ============================================================
+// 견적 추천 AI 로직 (Anthropic API 연동)
+// ============================================================
+async function runWizard() {
+  const budget      = parseInt(document.getElementById('budget-slider').value);
+  const selectedGames = [...document.querySelectorAll('#game-tags .game-tag.selected')].map(t => t.dataset.game);
+  const customGame  = document.getElementById('custom-game').value.trim();
+  if (customGame) selectedGames.push(customGame);
+  const games       = selectedGames.length ? selectedGames : ['다양한 게임'];
+  const wantPeri    = peripheralEnabled;
+  const periItems   = wantPeri
+    ? [...document.querySelectorAll('.peri-item:checked')].map(c => c.value)
+    : [];
+  const area = document.getElementById('wizard-result-area');
+
+  // ── 추천받기 버튼 비활성화 (중복 요청 방지) ─────────────
+  const submitBtn = document.querySelector('#section-wizard .btn-primary');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '⏳ AI 분석 중…'; }
+  const restoreBtn = () => { if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '⚡ AI 견적 추천받기'; } };
+
+  // ── 로딩 UI ──────────────────────────────────────────────
+  area.innerHTML = `
+    <div class="card" style="min-height:420px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:1.5rem;">
+      <div id="ai-spinner" style="width:48px; height:48px; border-radius:50%; border:3px solid var(--surface3); border-top:3px solid var(--accent); animation:spin 0.9s linear infinite;"></div>
+      <div style="text-align:center;">
+        <p style="font-weight:700; font-size:1rem; color:var(--text); margin-bottom:6px;">AI가 견적을 분석 중입니다…</p>
+        <p id="ai-status" style="font-size:0.82rem; color:var(--muted);">부품 호환성 검토 중</p>
+      </div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center;">
+        <span class="badge badge-green" style="font-size:0.7rem;">✓ CPU 소켓 매칭</span>
+        <span class="badge badge-blue"  style="font-size:0.7rem;">✓ 파워 용량 계산</span>
+        <span class="badge badge-yellow" style="font-size:0.7rem;">✓ 예산 초과 방지</span>
+      </div>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
+
+  const statusMsgs = ['부품 호환성 검토 중', '게임 퍼포먼스 예측 중', '가성비 최적화 계산 중', '주변기기 매칭 중'];
+  let si = 0;
+  const statusInterval = setInterval(() => {
+    si = (si + 1) % statusMsgs.length;
+    const el = document.getElementById('ai-status');
+    if (el) el.textContent = statusMsgs[si];
+  }, 1800);
+
+  // ── 시스템 프롬프트 ───────────────────────────────────────
+  // 주의: JSON 예시 안에 JS 주석(//)을 절대 넣지 말 것 → 모델이 그대로 복사해 파싱 오류 유발
+  const systemPrompt = `당신은 대한민국 조립 PC 전문가이자 가성비 큐레이터입니다.
+사용자의 예산과 게임 조건에 맞춰 조립 PC 견적과 선택적 주변기기를 추천합니다.
+
+[절대 규칙]
+1. 예산 엄수: 총 예상가(부품 합산)가 사용자 입력 예산(원 단위)을 절대 초과하지 않는다. 예산의 95~100%를 최대한 활용한다.
+2. 호환성 검증: CPU 소켓과 메인보드 소켓이 반드시 일치해야 한다(예: AM5 CPU → AM5 메인보드, LGA1700 CPU → LGA1700 메인보드). DDR4/DDR5 혼용 불가. 파워 용량은 시스템 TDP의 1.3배 이상 확보.
+3. 폼팩터: ATX 메인보드에는 ATX 케이스, mATX에는 mATX 이상 케이스.
+4. 주변기기 스마트 추천:
+   - FPS 게임(발로란트, 배틀그라운드, 에이펙스, 오버워치): 144Hz 이상 모니터 최우선, 초경량 마우스(80g 이하) 권장
+   - MOBA/RTS(리그오브레전드, 스타크래프트): 고Hz 모니터 + 정밀 마우스 + 기계식 키보드
+   - 소통이 중요한 게임(모든 멀티플레이어): 하드웨어 노이즈 억제 기능 있는 마이크/헤드셋 우선
+   - 오픈월드/싱글(사이버펑크, 마인크래프트): 색재현율 좋은 IPS/OLED 모니터, 쾌적한 헤드셋
+5. 제품명은 실제 2024~2025년 한국 시장에서 구매 가능한 실존 제품으로만 추천한다.
+6. 예상가는 한국 최저가 기준 원 단위 정수로 표기한다.
+7. 추천이유 문자열에 큰따옴표(")를 절대 사용하지 않는다. 작은따옴표나 다른 표현을 사용한다.
+
+[출력 형식 — 반드시 순수 JSON만, 코드블록 없이]
+응답은 반드시 아래 구조의 JSON 객체 하나만 출력한다. 앞뒤에 어떤 텍스트도 붙이지 않는다.
+{"견적요약":"한 줄 요약","예상총액":숫자,"부품리스트":[{"카테고리":"CPU","제품명":"제품명","예상가":숫자,"추천이유":"이유"},{"카테고리":"GPU","제품명":"제품명","예상가":숫자,"추천이유":"이유"},{"카테고리":"RAM","제품명":"제품명","예상가":숫자,"추천이유":"이유"},{"카테고리":"SSD","제품명":"제품명","예상가":숫자,"추천이유":"이유"},{"카테고리":"메인보드","제품명":"제품명","예상가":숫자,"추천이유":"이유"},{"카테고리":"파워","제품명":"제품명","예상가":숫자,"추천이유":"이유"},{"카테고리":"케이스","제품명":"제품명","예상가":숫자,"추천이유":"이유"}],"주변기기리스트":[],"퍼포먼스예측":"게임별 예상 FPS와 체감 설명"}
+주변기기가 없으면 주변기기리스트는 반드시 빈 배열 []로 둔다.`;
+
+  // ── 유저 프롬프트 ─────────────────────────────────────────
+  const periRequest = wantPeri && periItems.length
+    ? `주변기기 포함 요청: ${periItems.join(', ')}. 게임 특성에 맞게 스마트하게 추천하되, 본체와 주변기기 합산 예산이 ${budget * 10000}원을 초과하지 않도록 배분하라.`
+    : '주변기기 불필요. 주변기기리스트는 빈 배열로 반환하라.';
+
+  const userPrompt = `총 예산: ${budget * 10000}원 (${budget}만원) / 주요 게임: ${games.join(', ')} / ${periRequest} / 위 조건에 맞는 조립 PC 견적을 JSON으로만 반환하라.`;
+
+  // ── JSON 강건화 파서 ──────────────────────────────────────
+  // 1) 마크다운 펜스 제거  2) JS 주석 제거  3) trailing comma 제거  4) 잘린 JSON 복구 시도
+  function robustParseJSON(raw) {
+    // 마크다운 코드블록 제거
+    let s = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+    // JS 한 줄 주석 제거 (문자열 안 제외는 어렵지만 대부분의 경우 커버)
+    s = s.replace(/\/\/[^\n]*/g, '');
+    // trailing comma (객체/배열 닫기 전 쉼표) 제거
+    s = s.replace(/,\s*([\]}])/g, '$1');
+    // 첫 번째 { 부터 마지막 } 까지만 추출
+    const start = s.indexOf('{');
+    const end   = s.lastIndexOf('}');
+    if (start === -1) throw new Error('JSON 시작 괄호를 찾을 수 없습니다.');
+    if (end === -1) {
+      // JSON이 잘린 경우 — 열린 배열/객체를 닫아서 복구 시도
+      let partial = s.slice(start);
+      const openBrackets = (partial.match(/\[/g) || []).length - (partial.match(/\]/g) || []).length;
+      const openBraces   = (partial.match(/\{/g) || []).length - (partial.match(/\}/g) || []).length;
+      partial += ']'.repeat(Math.max(0, openBrackets)) + '}'.repeat(Math.max(0, openBraces));
+      // 잘린 마지막 문자열 필드가 닫히지 않았을 수 있으므로 한 번 더 trailing comma 처리
+      partial = partial.replace(/,\s*([\]}])/g, '$1');
+      return JSON.parse(partial);
+    }
+    return JSON.parse(s.slice(start, end + 1));
+  }
+
+  // ── API 호출 ──────────────────────────────────────────────
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 3000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+      }),
+    });
+
+    clearInterval(statusInterval);
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      throw new Error(errBody?.error?.message || `API 오류 ${res.status}`);
+    }
+
+    const data    = await res.json();
+    const rawText = (data.content || []).map(b => b.text || '').join('');
+
+    let result;
+    try {
+      result = robustParseJSON(rawText);
+    } catch (parseErr) {
+      // 파싱 실패 시 raw 텍스트를 콘솔에 찍어 디버깅 가능하게
+      console.error('[GearWiz] JSON 파싱 실패. 원문:', rawText);
+      throw new Error(`응답 파싱 오류: ${parseErr.message}`);
+    }
+
+    // 필수 필드 보정 (모델이 누락할 경우 방어)
+    result.부품리스트      = result.부품리스트      || [];
+    result.주변기기리스트  = result.주변기기리스트  || [];
+    result.견적요약        = result.견적요약        || '맞춤 견적';
+    result.퍼포먼스예측    = result.퍼포먼스예측    || '퍼포먼스 정보를 불러오지 못했습니다.';
+    result.예상총액        = result.예상총액        || 0;
+
+    restoreBtn();
+    renderWizardResult(result, budget, games);
+
+  } catch (e) {
+    clearInterval(statusInterval);
+    restoreBtn();
+    area.innerHTML = `<div class="card" style="border-color:rgba(255,60,95,0.3); min-height:200px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:1rem; padding:2rem;">
+      <span style="font-size:2rem;">⚠️</span>
+      <p style="color:var(--accent2); font-weight:700; font-size:0.95rem; text-align:center;">오류가 발생했습니다</p>
+      <p style="color:var(--muted); font-size:0.82rem; text-align:center; line-height:1.7; word-break:break-all;">${e.message}</p>
+      <button onclick="runWizard()" class="btn-primary" style="margin-top:0.5rem; font-size:0.85rem; padding:0.6rem 1.5rem;">🔄 다시 시도</button>
+    </div>`;
+  }
+}
+
+// ============================================================
+// 결과 렌더링 함수
+// ============================================================
+function renderWizardResult(r, budget, games) {
+  const area = document.getElementById('wizard-result-area');
+  const won  = n => Number(n).toLocaleString('ko-KR') + '원';
+  const catIcon = { CPU:'🧠', GPU:'🎮', RAM:'💾', SSD:'💿', HDD:'🗄', 메인보드:'🔌', 파워:'⚡', 케이스:'🖥', 쿨러:'❄️', 모니터:'🖥', 마우스:'🖱', 키보드:'⌨', 헤드셋:'🎧', 마이크:'🎙', 이어폰:'🎵' };
+
+  // ── 카테고리별 제휴 링크 분기 ─────────────────────────────
+  // PC 부품 → 다나와 검색 링크 (+ 나중에 파트너스 ID 추가)
+  // 주변기기 → 쿠팡 검색 링크 (+ 나중에 파트너스 서브ID 추가)
+  const PC_PARTS = new Set(['CPU','GPU','RAM','SSD','HDD','메인보드','파워','케이스','쿨러']);
+  const PERIPHERALS = new Set(['모니터','마우스','키보드','헤드셋','마이크','이어폰','패드']);
+
+  // ★ 여기에 본인 파트너스 ID를 삽입하세요 ★
+  const DANAWA_PARTNER_ID = 'YOUR_DANAWA_PARTNER_ID';   // 다나와 파트너 ID (없으면 일반 검색)
+  const COUPANG_PARTNER_ID = 'YOUR_COUPANG_PARTNER_ID'; // 쿠팡 파트너스 서브ID
+
+  function getAffiliateLink(item) {
+    const q = encodeURIComponent(item.제품명);
+    if (PC_PARTS.has(item.카테고리)) {
+      // 다나와 검색 링크 — 파트너스 ID 있으면 쿼리에 추가
+      const base = `https://search.danawa.com/dsearch.php?query=${q}&tab=main`;
+      return DANAWA_PARTNER_ID !== 'YOUR_DANAWA_PARTNER_ID'
+        ? `${base}&partner=${DANAWA_PARTNER_ID}`
+        : base;
+    } else {
+      // 쿠팡 검색 링크 — 파트너스 서브ID 있으면 추가
+      const base = `https://www.coupang.com/np/search?q=${q}`;
+      return COUPANG_PARTNER_ID !== 'YOUR_COUPANG_PARTNER_ID'
+        ? `${base}&subId=${COUPANG_PARTNER_ID}`
+        : base;
+    }
+  }
+
+  function getLinkLabel(item) {
+    if (PC_PARTS.has(item.카테고리))  return '🔍 다나와 최저가';
+    if (PERIPHERALS.has(item.카테고리)) return '🛒 쿠팡 최저가';
+    return '🔍 최저가 확인';
+  }
+
+  function getLinkStyle(item) {
+    // 다나와 → 파란 계열 버튼, 쿠팡 → 주황 계열 버튼
+    if (PC_PARTS.has(item.카테고리))
+      return 'font-size:0.72rem; padding:3px 8px; border-color:#4A90D9; color:#4A90D9;';
+    return 'font-size:0.72rem; padding:3px 8px; border-color:#FF6B00; color:#FF6B00;';
+  }
+
+  // 부품 행 생성 함수
+  const makeItemRow = (item, idx) => `
+    <div style="display:flex; align-items:center; gap:10px; padding:0.65rem 0; ${idx > 0 ? 'border-top:1px solid var(--border);' : ''}">
+      <div style="width:34px; height:34px; border-radius:8px; background:var(--surface3); display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0;">
+        ${catIcon[item.카테고리] || '📦'}
+      </div>
+      <div style="flex:1; min-width:0;">
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:1px;">
+          <span style="font-size:0.7rem; color:var(--muted); font-weight:600; letter-spacing:0.06em;">${item.카테고리}</span>
+        </div>
+        <p style="font-size:0.85rem; font-weight:600; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.제품명}</p>
+        <p style="font-size:0.72rem; color:var(--muted); line-height:1.4; margin-top:1px;">${item.추천이유}</p>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
+        <span style="font-size:0.82rem; font-weight:700; color:var(--accent);">${won(item.예상가)}</span>
+        <a href="${getAffiliateLink(item)}" target="_blank" rel="noopener noreferrer"
+           class="btn-buy" style="${getLinkStyle(item)}">${getLinkLabel(item)}</a>
+      </div>
+    </div>`;
+
+  const partsHtml = (r.부품리스트 || []).map((item, i) => makeItemRow(item, i)).join('');
+
+  const hasPeri = r.주변기기리스트 && r.주변기기리스트.length > 0;
+  const periHtml = hasPeri ? `
+    <hr class="divider" style="margin:1.25rem 0;" />
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:0.75rem;">
+      <h4 style="font-size:0.85rem; font-weight:700; color:var(--text);">🖥 주변기기</h4>
+      <span class="badge badge-blue" style="font-size:0.68rem;">${r.주변기기리스트.length}개 추천</span>
+    </div>
+    <div style="background:var(--surface2); border-radius:10px; padding:0 0.75rem;">
+      ${r.주변기기리스트.map((item, i) => makeItemRow(item, i)).join('')}
+    </div>` : '';
+
+  // 예산 대비 사용률
+  const usageRate = Math.min(100, Math.round((r.예상총액 / (budget * 10000)) * 100));
+  const usageColor = usageRate > 98 ? 'var(--accent2)' : usageRate > 90 ? 'var(--accent)' : '#FFC800';
+
+  area.innerHTML = `<div class="fade-up">
+    <div class="card glow-green" style="border-color:rgba(255,204,51,0.25);">
+
+      <!-- 헤더 -->
+      <div style="margin-bottom:1rem;">
+        <div style="display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap;">
+          <span class="badge badge-green">AI 맞춤 견적</span>
+          <span class="badge badge-blue">${games.join(' · ')}</span>
+        </div>
+        <h3 style="font-size:1.05rem; font-weight:700; line-height:1.4;">${r.견적요약}</h3>
+      </div>
+
+      <!-- 예산 게이지 -->
+      <div style="background:var(--surface2); border-radius:10px; padding:0.85rem 1rem; margin-bottom:1.25rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-size:0.78rem; color:var(--muted); font-weight:600;">예산 사용률</span>
+          <div style="display:flex; align-items:baseline; gap:6px;">
+            <span style="font-size:1.1rem; font-weight:700; color:${usageColor};">${won(r.예상총액)}</span>
+            <span style="font-size:0.75rem; color:var(--muted);">/ ${budget}만원</span>
+          </div>
+        </div>
+        <div class="perf-bar-wrap">
+          <div class="perf-bar" style="width:${usageRate}%; background:${usageColor};"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-top:4px;">
+          <span style="font-size:0.7rem; color:var(--muted);">0원</span>
+          <span style="font-size:0.7rem; color:var(--muted); font-weight:600;">${usageRate}% 활용</span>
+          <span style="font-size:0.7rem; color:var(--muted);">${budget}만원</span>
+        </div>
+      </div>
+
+      <!-- 부품 리스트 -->
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:0.75rem;">
+        <h4 style="font-size:0.85rem; font-weight:700; color:var(--text);">🔧 조립 PC 부품</h4>
+        <span class="badge badge-green" style="font-size:0.68rem;">${(r.부품리스트||[]).length}개 부품</span>
+      </div>
+      <div style="background:var(--surface2); border-radius:10px; padding:0 0.75rem;">
+        ${partsHtml}
+      </div>
+
+      ${periHtml}
+
+      <!-- 퍼포먼스 예측 -->
+      <hr class="divider" style="margin:1.25rem 0;" />
+      <div style="background:rgba(255,204,51,0.05); border:1px solid rgba(255,204,51,0.15); border-radius:10px; padding:0.9rem 1rem;">
+        <p style="font-size:0.75rem; color:var(--accent); font-weight:700; letter-spacing:0.06em; margin-bottom:5px;">⚡ AI 퍼포먼스 예측</p>
+        <p style="font-size:0.85rem; color:var(--text); line-height:1.7;">${r.퍼포먼스예측}</p>
+      </div>
+
+      <!-- 면책 + 버튼 -->
+      <div style="margin-top:1.25rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+        <p style="font-size:0.68rem; color:var(--muted); opacity:0.7; line-height:1.6;">
+          * AI 예상가 기준 | 실제 가격은 시장 변동에 따라 다를 수 있습니다<br>* 제휴 링크 포함 — 구매 시 소정의 수수료가 발생할 수 있습니다
+        </p>
+        <button onclick="runWizard()" style="background:transparent; border:1px solid var(--border); color:var(--muted); padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.78rem; font-family:inherit; transition:all 0.2s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">🔄 재생성</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// 오류 진단 로직
+// ============================================================
+
+// 입력창 ↔ 드롭다운 동기화
+function syncErrorInputs(source) {
+  const input  = document.getElementById('error-input');
+  const select = document.getElementById('error-code');
+  if (source === 'select') {
+    // 드롭다운 선택 시 입력창에도 반영
+    input.value = select.value;
+  } else {
+    // 입력창 타이핑 시 드롭다운 연동 (DB에 있는 코드면 자동 선택)
+    const typed = input.value.trim().toUpperCase();
+    const match = Object.keys(ERROR_DB).find(k => k.toUpperCase() === typed);
+    select.value = match || '';
+  }
+}
+
+// 빠른 선택 태그 클릭
+function quickError(code) {
+  document.getElementById('error-input').value  = code;
+  document.getElementById('error-code').value   = code;
+  runErrorDiag();
+}
+
+// 로딩 UI 헬퍼
+function showErrorLoading(code) {
+  const area = document.getElementById('error-result-area');
+  area.innerHTML = `
+    <div class="card" style="min-height:340px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:1.5rem;">
+      <div style="width:44px; height:44px; border-radius:50%; border:3px solid var(--surface3); border-top:3px solid var(--accent2); animation:spin 0.9s linear infinite;"></div>
+      <div style="text-align:center;">
+        <p style="font-weight:700; font-size:1rem; color:var(--text); margin-bottom:4px;">AI가 오류를 분석 중입니다…</p>
+        <p style="font-size:0.82rem; color:var(--muted);">"${code}" 원인 및 해결법 탐색 중</p>
+      </div>
+    </div>`;
+}
+
+async function runErrorDiag() {
+  // 입력창 우선, 없으면 드롭다운
+  const inputVal  = document.getElementById('error-input').value.trim();
+  const selectVal = document.getElementById('error-code').value;
+  const code      = inputVal || selectVal;
+  const mobo      = document.getElementById('mobo-brand').value;
+  const area      = document.getElementById('error-result-area');
+
+  if (!code) {
+    area.innerHTML = `<div class="card" style="border-color:rgba(255,60,95,0.2); display:flex; align-items:center; justify-content:center; min-height:150px; flex-direction:column; gap:8px;">
+      <span style="font-size:1.5rem;">☝️</span>
+      <p style="color:var(--muted); font-size:0.88rem;">오류 코드를 입력하거나 목록에서 선택해주세요.</p>
+    </div>`;
+    return;
+  }
+
+  // ── 내장 DB에 있으면 즉시 렌더 ─────────────────────────────
+  const dbKey = Object.keys(ERROR_DB).find(k => k.toUpperCase() === code.toUpperCase());
+  if (dbKey) {
+    renderErrorResult(ERROR_DB[dbKey], dbKey, mobo);
+    return;
+  }
+
+  // ── DB에 없으면 AI로 분석 ───────────────────────────────────
+  showErrorLoading(code);
+
+  const moboCtx = mobo ? `메인보드 제조사: ${mobo}` : '메인보드 제조사: 알 수 없음';
+  const systemPrompt = `당신은 PC 게이밍 오류 전문가입니다. 사용자가 입력한 오류 코드나 오류 메시지를 분석해 원인과 단계별 해결법을 한국어로 안내합니다.
+반드시 아래 JSON만 반환하고 다른 텍스트는 출력하지 않는다:
+{"title":"오류 제목","severity":"high|medium|low","desc":"원인 설명","commonCause":"주요 원인 한 줄","steps":["1단계","2단계","3단계","4단계","5단계"]}`;
+  const userPrompt = `오류 코드: ${code} / ${moboCtx} / 이 오류의 원인과 해결법을 JSON으로만 반환하라.`;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+      }),
+    });
+
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}));
+      throw new Error(e?.error?.message || `API 오류 ${res.status}`);
+    }
+
+    const data    = await res.json();
+    const rawText = (data.content || []).map(b => b.text || '').join('');
+    let parsed;
+    try {
+      const s = rawText.replace(/```json\s*/gi,'').replace(/```\s*/g,'').replace(/\/\/[^\n]*/g,'').replace(/,\s*([\]}])/g,'$1').trim();
+      const start = s.indexOf('{'), end = s.lastIndexOf('}');
+      parsed = JSON.parse(s.slice(start, end + 1));
+    } catch {
+      throw new Error('AI 응답 파싱 실패');
+    }
+
+    // AI 응답을 내장 DB 형식으로 변환해서 동일한 렌더러 사용
+    const aiErr = {
+      title:       parsed.title       || `${code} 오류`,
+      desc:        parsed.desc        || '',
+      severity:    parsed.severity    || 'medium',
+      commonCause: parsed.commonCause || '',
+      steps:       { general: parsed.steps || [] },
+      aiGenerated: true,
+    };
+    renderErrorResult(aiErr, code, mobo);
+
+  } catch (e) {
+    area.innerHTML = `<div class="card" style="border-color:rgba(255,60,95,0.3); min-height:200px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:1rem; padding:2rem;">
+      <span style="font-size:2rem;">⚠️</span>
+      <p style="color:var(--accent2); font-weight:700;">AI 분석 오류</p>
+      <p style="color:var(--muted); font-size:0.82rem; text-align:center; line-height:1.7;">${e.message}</p>
+      <button onclick="runErrorDiag()" class="btn-primary" style="font-size:0.85rem; padding:0.6rem 1.5rem;">🔄 다시 시도</button>
+    </div>`;
+  }
+}
+
+// 공통 렌더러 (내장 DB / AI 결과 모두 처리)
+function renderErrorResult(err, code, mobo) {
+  const area         = document.getElementById('error-result-area');
+  const severityBadge = err.severity === 'high' ? 'badge-red' : err.severity === 'medium' ? 'badge-yellow' : 'badge-green';
+  const severityLabel = err.severity === 'high' ? '🔴 심각' : err.severity === 'medium' ? '🟡 중간' : '🟢 경미';
+  const steps         = err.steps?.general || err.steps || [];
+
+  const stepsHtml = steps.map((s, i) => `
+    <div style="display:flex; gap:12px; align-items:flex-start; padding:0.75rem 0; ${i < steps.length-1 ? 'border-bottom:1px solid var(--border);' : ''}">
+      <div class="step-num">${i+1}</div>
+      <p style="font-size:0.85rem; line-height:1.6; padding-top:2px;">${s}</p>
+    </div>`).join('');
+
+  let biosHtml = '';
+  if (mobo && err.steps?.[mobo]) {
+    const b = err.steps[mobo];
+    biosHtml = `
+      <div class="card-sm" style="margin-top:1rem; border-color:rgba(255,204,51,0.2);">
+        <h4 style="font-size:0.85rem; font-weight:700; color:var(--accent); margin-bottom:0.75rem;">⌨ ${mobo} BIOS 전용 가이드</h4>
+        <div class="spec-row"><span style="color:var(--muted); font-size:0.82rem;">BIOS 진입 키</span><span style="font-weight:700; color:var(--accent); font-size:0.9rem;">${b.biosKey}</span></div>
+        <div style="padding:0.5rem 0; border-bottom:1px solid var(--border);">
+          <p style="font-size:0.75rem; color:var(--muted); margin-bottom:3px; font-weight:600;">Secure Boot 경로</p>
+          <p style="font-size:0.82rem; line-height:1.6;">${b.secureBoot}</p>
+        </div>
+        <div style="padding:0.5rem 0; border-bottom:1px solid var(--border);">
+          <p style="font-size:0.75rem; color:var(--muted); margin-bottom:3px; font-weight:600;">TPM 2.0 경로</p>
+          <p style="font-size:0.82rem; line-height:1.6;">${b.tpm}</p>
+        </div>
+        <div style="padding:0.5rem 0 0;">
+          <p style="font-size:0.75rem; color:var(--muted); margin-bottom:3px; font-weight:600;">💡 ${mobo} 팁</p>
+          <p style="font-size:0.82rem; line-height:1.6; color:var(--accent2);">${b.tip}</p>
+        </div>
+      </div>`;
+  }
+
+  area.innerHTML = `<div class="fade-up">
+    <div class="card glow-red" style="border-color:rgba(255,60,95,0.2);">
+      <div style="margin-bottom:1rem;">
+        <div style="display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap;">
+          <span class="badge ${severityBadge}">${severityLabel}</span>
+          <span class="badge badge-blue">오류 코드: ${code}</span>
+          ${err.aiGenerated ? '<span class="badge badge-yellow">🤖 AI 분석</span>' : '<span class="badge badge-green">✓ DB 즉시 해결</span>'}
+        </div>
+        <h3 style="font-size:1rem; font-weight:700; line-height:1.3;">${err.title}</h3>
+      </div>
+      ${err.desc ? `<p style="font-size:0.85rem; color:var(--muted); line-height:1.6; margin-bottom:0.75rem;">${err.desc}</p>` : ''}
+      ${err.commonCause ? `<div class="card-sm" style="margin-bottom:1rem;">
+        <span style="font-size:0.75rem; color:var(--muted); font-weight:600;">주요 원인: </span>
+        <span style="font-size:0.82rem; color:var(--accent2);">${err.commonCause}</span>
+      </div>` : ''}
+      <h4 style="font-size:0.82rem; font-weight:700; color:var(--muted); letter-spacing:0.06em; margin-bottom:0.25rem;">📋 해결 단계</h4>
+      <div>${stepsHtml}</div>
+      ${biosHtml}
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// 사운드 진단 로직
+// ============================================================
+function runSoundDiag() {
+  const symNoise  = document.getElementById('sym-noise').checked;
+  const symSilent = document.getElementById('sym-silent').checked;
+  const symEcho   = document.getElementById('sym-echo').checked;
+  const symMicNone= document.getElementById('sym-mic-none').checked;
+  const symVolume = document.getElementById('sym-volume').checked;
+  const symDiscord= document.getElementById('sym-discord').checked;
+
+  const active = [
+    symNoise && 'noise', symSilent && 'silent', symEcho && 'echo',
+    symMicNone && 'mic_none', symVolume && 'volume', symDiscord && 'discord'
+  ].filter(Boolean);
+
+  const area = document.getElementById('sound-result-area');
+
+  if (!active.length) {
+    area.innerHTML = `<div class="card" style="display:flex; align-items:center; justify-content:center; min-height:150px; flex-direction:column; gap:1rem;"><span style="font-size:1.5rem;">☝️</span><p style="color:var(--muted);">하나 이상의 증상을 체크해주세요.</p></div>`;
+    return;
+  }
+
+  const cards = active.map(sym => {
+    const sol = SOUND_SOLUTIONS[sym];
+    const stepsHtml = sol.steps.map((step, i) => `
+      <div style="display:flex; gap:12px; align-items:flex-start; padding:0.7rem 0; ${i < sol.steps.length-1 ? 'border-bottom:1px solid var(--border);' : ''}">
+        <div class="step-num" style="border-color:${sol.color}33; background:${sol.color}15; color:${sol.color};">${i+1}</div>
+        <div>
+          <p style="font-size:0.85rem; font-weight:600; margin-bottom:2px;">${step.title}</p>
+          <p style="font-size:0.8rem; color:var(--muted); line-height:1.6;">${step.desc}</p>
+        </div>
+      </div>
+    `).join('');
+
+    return `<div class="card fade-up" style="margin-bottom:0.75rem; border-color:${sol.color}33;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:0.75rem;">
+        <span class="badge ${sol.badge}">${sol.title.split(' ')[0]}</span>
+        <h3 style="font-size:0.95rem; font-weight:700;">${sol.title.replace(/^[^\s]+\s/, '')}</h3>
+      </div>
+      ${stepsHtml}
+    </div>`;
+  }).join('');
+
+  area.innerHTML = `<div>
+    <p style="font-size:0.8rem; color:var(--muted); margin-bottom:1rem; font-weight:600;">
+      ${active.length}가지 증상 감지 → 해결 가이드 ${active.length}개
+    </p>
+    ${cards}
+    <div class="card-sm" style="margin-top:0.5rem; border-color:rgba(80,160,255,0.2);">
+      <p style="font-size:0.78rem; color:var(--muted); line-height:1.7;">
+        💡 <strong style="color:var(--text);">그래도 해결이 안 된다면:</strong>
+        윈도우 설정 → 시스템 → 사운드 → '일반적인 사운드 문제 해결' 클릭. 또는 드라이버 완전 초기화 후 메인보드 공식 드라이버 재설치를 권장합니다.
+      </p>
+    </div>
+  </div>`;
+}
+
+function clearSound() {
+  document.querySelectorAll('.diag-check input[type="checkbox"]').forEach(c => c.checked = false);
+  const area = document.getElementById('sound-result-area');
+  area.innerHTML = `<div class="card" style="min-height:300px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:1rem; border-style:dashed;">
+    <div style="font-size:2.5rem; opacity:0.2;">🎙</div>
+    <p style="color:var(--muted); font-size:0.9rem; text-align:center;">증상을 선택하고<br>진단 시작을 눌러주세요</p>
+  </div>`;
+}
+
+// 페이지 로드 시 슬라이더 초기값 표시
+updateBudget();
+
+// ── 이벤트 위임: game-tags 컨테이너에 한 번만 달아두면
+//    결과 렌더링 후에도 태그 클릭이 항상 동작합니다
+document.getElementById('game-tags').addEventListener('click', e => {
+  const tag = e.target.closest('.game-tag');
+  if (tag) tag.classList.toggle('selected');
+});
+
+// ── 주변기기 세부 옵션 체크박스 클릭 시 버블링으로
+//    togglePeripheral()이 중복 호출되지 않도록 전파를 차단합니다
+document.getElementById('peri-options').addEventListener('click', e => {
+  e.stopPropagation();
+});
+</script>
+</body>
+</html>
